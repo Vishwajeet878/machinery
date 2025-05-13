@@ -227,7 +227,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	}
 	if !b.IsTaskRegistered(sig.Name) {
 		if sig.IgnoreWhenTaskNotRegistered {
-			b.deleteOne(delivery)
+			//b.deleteOne(delivery)
 		}
 		return fmt.Errorf("task %s is not registered", sig.Name)
 	}
