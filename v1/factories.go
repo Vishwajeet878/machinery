@@ -91,7 +91,7 @@ func BrokerFactory(cnf *config.Config) (brokeriface.Broker, error) {
 			return sqsbroker.New(cnf), nil
 		}
 	} else {
-		if strings.HasPrefix(cnf.Broker, "https://sqs") || strings.HasPrefix(cnf.Broker, "https://sqs") {
+		if strings.HasPrefix(cnf.Broker, "https://sqs") || strings.HasPrefix(cnf.Broker, "http://sqs") {
 			return sqsbroker.New(cnf), nil
 		}
 	}
