@@ -61,7 +61,10 @@ func New(cnf *config.Config) iface.Broker {
 func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
 	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	qURL := b.getQueueURL(taskProcessor)
-	fmt.Printf("Picking from Queue %v", *qURL)
+	fmt.Printf("\nPicking from Queue %v", *qURL)
+	for _, t := range b.GetRegisteredTaskNames() {
+		fmt.Println("Registered TASK : %s", t)
+	}
 	//save it so that it can be used later when attempting to delete task
 	b.queueUrl = qURL
 
@@ -255,6 +258,7 @@ func (b *Broker) deleteOne(delivery *awssqs.ReceiveMessageOutput) error {
 	if err != nil {
 		return err
 	}
+	log.INFO.Println("Successfully deleted message from queue ", *qURL)
 	return nil
 }
 
