@@ -59,8 +59,8 @@ func New(cnf *config.Config) iface.Broker {
 
 // StartConsuming enters a loop and waits for incoming messages
 func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
-	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	qURL := b.getQueueURL(taskProcessor)
+	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	fmt.Printf("\nPicking from Queue %s for woker %v", *qURL, taskProcessor.GetTag())
 	for _, t := range b.GetRegisteredTaskNames() {
 		fmt.Println("Registered TASK : %s", t)
@@ -183,6 +183,7 @@ func (b *Broker) Publish(ctx context.Context, signature *tasks.Signature) error 
 // consume is a method which keeps consuming deliveries from a channel, until there is an error or a stop signal
 func (b *Broker) consume(deliveries <-chan *awssqs.ReceiveMessageOutput, concurrency int, taskProcessor iface.TaskProcessor, pool chan struct{}) error {
 
+	fmt.Printf("INCONSUME Woker : %v QueueUrl %s", taskProcessor.GetTag(), b.queueUrl)
 	errorsChan := make(chan error)
 
 	for {
@@ -202,7 +203,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		log.ERROR.Printf("received an empty message, the delivery was %v", delivery)
 		return errors.New("received empty message, the delivery is " + delivery.GoString())
 	}
-	b.queueUrl = b.defaultQueueURL()
+	b.queueUrl = b.getQueueURL(taskProcessor)
 
 	sig := new(tasks.Signature)
 	decoder := json.NewDecoder(strings.NewReader(*delivery.Messages[0].Body))
