@@ -183,7 +183,7 @@ func (b *Broker) Publish(ctx context.Context, signature *tasks.Signature) error 
 // consume is a method which keeps consuming deliveries from a channel, until there is an error or a stop signal
 func (b *Broker) consume(deliveries <-chan *awssqs.ReceiveMessageOutput, concurrency int, taskProcessor iface.TaskProcessor, pool chan struct{}) error {
 
-	fmt.Printf("INCONSUME Woker : %v QueueUrl %s", taskProcessor.GetTag(), b.queueUrl)
+	fmt.Printf("INCONSUME Woker : %v QueueUrl %s", taskProcessor.GetTag(), *b.queueUrl)
 	errorsChan := make(chan error)
 
 	for {
