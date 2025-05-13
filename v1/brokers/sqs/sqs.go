@@ -234,7 +234,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	}
 	// Delete message after successfully consuming and processing the message
 	if err = b.deleteOne(delivery); err != nil {
-		log.ERROR.Printf("error when deleting the delivery. delivery is %v, Error=%s", delivery, err)
+		log.ERROR.Printf("error when deleting the delivery. delivery is %v, Error=%s From Queue : %s", delivery, err, b.defaultQueueURL())
 	}
 	return err
 }
