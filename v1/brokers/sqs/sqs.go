@@ -78,14 +78,10 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 	b.stopReceivingChan = make(chan int)
 	b.receivingWG.Add(1)
 
-	if err := b.consume(deliveries, concurrency, taskProcessor, pool); err != nil {
-		return b.GetRetry(), err
-	}
-
 	go func() {
 		defer b.receivingWG.Done()
 
-		log.INFO.Printf("[*] Waiting for messages on queue: %s. To exit press CTRL+C\n", *qURL)
+		log.INFO.Printf("[*] Waiting for messages on queue: %s. for Worker %s To exit press CTRL+C\n", *qURL, taskProcessor.GetTag())
 
 		for {
 			select {
@@ -110,6 +106,9 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 
 		}
 	}()
+	if err := b.consume(deliveries, concurrency, taskProcessor, pool); err != nil {
+		return b.GetRetry(), err
+	}
 
 	return b.GetRetry(), nil
 }
