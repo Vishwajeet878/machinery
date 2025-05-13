@@ -219,7 +219,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	// and leave the message in the queue
 	fmt.Printf("Printing Messages")
 	for _, msg := range delivery.Messages {
-		fmt.Printf("\nReceiptHandle : %v", msg.ReceiptHandle)
+		fmt.Printf("\nReceiptHandle : %v", *msg)
 	}
 	if !b.IsTaskRegistered(sig.Name) {
 		if sig.IgnoreWhenTaskNotRegistered {
