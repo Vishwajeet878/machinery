@@ -78,6 +78,10 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 	b.stopReceivingChan = make(chan int)
 	b.receivingWG.Add(1)
 
+	if err := b.consume(deliveries, concurrency, taskProcessor, pool); err != nil {
+		return b.GetRetry(), err
+	}
+
 	go func() {
 		defer b.receivingWG.Done()
 
@@ -106,10 +110,6 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 
 		}
 	}()
-
-	if err := b.consume(deliveries, concurrency, taskProcessor, pool); err != nil {
-		return b.GetRetry(), err
-	}
 
 	return b.GetRetry(), nil
 }
