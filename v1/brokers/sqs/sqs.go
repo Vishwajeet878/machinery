@@ -202,6 +202,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		log.ERROR.Printf("received an empty message, the delivery was %v", delivery)
 		return errors.New("received empty message, the delivery is " + delivery.GoString())
 	}
+	b.queueUrl = b.defaultQueueURL()
 
 	sig := new(tasks.Signature)
 	decoder := json.NewDecoder(strings.NewReader(*delivery.Messages[0].Body))
