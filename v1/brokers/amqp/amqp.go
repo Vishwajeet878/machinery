@@ -455,6 +455,11 @@ type sigDumper struct {
 	Signatures  []*tasks.Signature
 }
 
+func (s *sigDumper) GetTag() string {
+	//TODO implement me
+	return s.customQueue
+}
+
 func (s *sigDumper) Process(sig *tasks.Signature) error {
 	s.Signatures = append(s.Signatures, sig)
 	return nil
