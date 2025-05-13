@@ -61,7 +61,7 @@ func New(cnf *config.Config) iface.Broker {
 func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
 	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	qURL := b.getQueueURL(taskProcessor)
-	fmt.Printf("\nPicking from Queue %v", *qURL)
+	fmt.Printf("\nPicking from Queue %s for woker %v", *qURL, taskProcessor.GetTag())
 	for _, t := range b.GetRegisteredTaskNames() {
 		fmt.Println("Registered TASK : %s", t)
 	}
@@ -227,7 +227,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	}
 	if !b.IsTaskRegistered(sig.Name) {
 		if sig.IgnoreWhenTaskNotRegistered {
-			//b.deleteOne(delivery)
+			b.deleteOne(delivery)
 		}
 		return fmt.Errorf("task %s is not registered", sig.Name)
 	}

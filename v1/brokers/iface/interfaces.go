@@ -26,4 +26,5 @@ type TaskProcessor interface {
 	Process(signature *tasks.Signature) error
 	CustomQueue() string
 	PreConsumeHandler() bool
+	GetTag() string
 }
