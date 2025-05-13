@@ -61,7 +61,7 @@ func New(cnf *config.Config) iface.Broker {
 func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
 	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	qURL := b.getQueueURL(taskProcessor)
-	fmt.Printf("Picking from Queue %v", qURL)
+	fmt.Printf("Picking from Queue %v", *qURL)
 	//save it so that it can be used later when attempting to delete task
 	b.queueUrl = qURL
 
