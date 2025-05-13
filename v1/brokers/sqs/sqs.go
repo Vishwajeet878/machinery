@@ -221,7 +221,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 
 	// If the task is not registered return an error
 	// and leave the message in the queue
-	fmt.Printf("Printing Messages")
+	fmt.Printf("Printing Messages in woker %v", taskProcessor.GetTag())
 	for _, msg := range delivery.Messages {
 		fmt.Printf("\nReceiptHandle : %v", *msg)
 	}
