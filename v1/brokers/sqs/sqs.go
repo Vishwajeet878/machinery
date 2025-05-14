@@ -226,8 +226,11 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	for _, msg := range delivery.Messages {
 		fmt.Printf("\nReceiptHandle : %v", *msg)
 	}
+
 	if !b.IsTaskRegistered(sig.Name) {
 		if sig.IgnoreWhenTaskNotRegistered {
+			url := b.GetConfig().Broker + "/" + sig.RoutingKey
+			b.queueUrl = &url
 			b.deleteOne(delivery)
 		}
 		return fmt.Errorf("task %s is not registered", sig.Name)
@@ -242,6 +245,8 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		return err
 	}
 	// Delete message after successfully consuming and processing the message
+	url := b.GetConfig().Broker + "/" + sig.RoutingKey
+	b.queueUrl = &url
 	if err = b.deleteOne(delivery); err != nil {
 		log.ERROR.Printf("error when deleting the delivery. delivery is %v, Error=%s From Queue : %s", delivery, err, *b.defaultQueueURL())
 	}
