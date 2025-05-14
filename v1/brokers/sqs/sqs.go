@@ -62,9 +62,6 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 	qURL := b.getQueueURL(taskProcessor)
 	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
 	fmt.Printf("\nPicking from Queue %s for woker %v", *qURL, taskProcessor.GetTag())
-	for _, t := range b.GetRegisteredTaskNames() {
-		fmt.Println("Registered TASK : %s", t)
-	}
 	//save it so that it can be used later when attempting to delete task
 	b.queueUrl = qURL
 
@@ -203,15 +200,14 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		log.ERROR.Printf("received an empty message, the delivery was %v", delivery)
 		return errors.New("received empty message, the delivery is " + delivery.GoString())
 	}
-	b.queueUrl = b.getQueueURL(taskProcessor)
-
+	qURL := b.defaultQueueURL()
 	sig := new(tasks.Signature)
 	decoder := json.NewDecoder(strings.NewReader(*delivery.Messages[0].Body))
 	decoder.UseNumber()
 	if err := decoder.Decode(sig); err != nil {
 		log.ERROR.Printf("unmarshal error. the delivery is %v", delivery)
 		// if the unmarshal fails, remove the delivery from the queue
-		if delErr := b.deleteOne(delivery); delErr != nil {
+		if delErr := b.deleteOne(delivery, qURL); delErr != nil {
 			log.ERROR.Printf("error when deleting the delivery. delivery is %v, Error=%s", delivery, delErr)
 		}
 		return err
@@ -219,7 +215,10 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 	if delivery.Messages[0].ReceiptHandle != nil {
 		sig.SQSReceiptHandle = *delivery.Messages[0].ReceiptHandle
 	}
-
+	if sig.RoutingKey != "" {
+		routingKeyQueueUrl := b.GetConfig().Broker + "/" + sig.RoutingKey
+		qURL = &routingKeyQueueUrl
+	}
 	// If the task is not registered return an error
 	// and leave the message in the queue
 	fmt.Printf("Printing Messages in woker %v for queueUrl %s", taskProcessor.GetTag(), *b.queueUrl)
@@ -231,7 +230,7 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		if sig.IgnoreWhenTaskNotRegistered {
 			url := b.GetConfig().Broker + "/" + sig.RoutingKey
 			b.queueUrl = &url
-			b.deleteOne(delivery)
+			b.deleteOne(delivery, qURL)
 		}
 		return fmt.Errorf("task %s is not registered", sig.Name)
 	}
@@ -245,17 +244,14 @@ func (b *Broker) consumeOne(delivery *awssqs.ReceiveMessageOutput, taskProcessor
 		return err
 	}
 	// Delete message after successfully consuming and processing the message
-	url := b.GetConfig().Broker + "/" + sig.RoutingKey
-	b.queueUrl = &url
-	if err = b.deleteOne(delivery); err != nil {
+	if err = b.deleteOne(delivery, qURL); err != nil {
 		log.ERROR.Printf("error when deleting the delivery. delivery is %v, Error=%s From Queue : %s", delivery, err, *b.defaultQueueURL())
 	}
 	return err
 }
 
 // deleteOne is a method delete a delivery from AWS SQS
-func (b *Broker) deleteOne(delivery *awssqs.ReceiveMessageOutput) error {
-	qURL := b.defaultQueueURL()
+func (b *Broker) deleteOne(delivery *awssqs.ReceiveMessageOutput, qURL *string) error {
 	_, err := b.service.DeleteMessage(&awssqs.DeleteMessageInput{
 		QueueUrl:      qURL,
 		ReceiptHandle: delivery.Messages[0].ReceiptHandle,
